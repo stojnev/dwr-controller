@@ -40,18 +40,15 @@ int pseudoClickDelay = 25;
 OneButton buttonSTB(pinButtonSTB, true);
 OneButton buttonSWT(pinButtonSWT, true);
 
+boolean debugSerial = true; // Determines if output written to serial (mostly if not exclusively for debugging purposes).
 volatile unsigned long timeHallNew[12]; unsigned long timeHallPrevious[12]; // Variables pairs to hold new and old times for sensor triggers - arrays are provisioned to account for a maximum of 8 sensor triggers.
 boolean activeSpin = false; boolean justStarted = true; boolean modeAutomatic = true; // Variables to indicate whether (1) actively spinning, (2) just started spinning (legacy purpose) and (3) status of automatic correction. 
 long countSpin = 0; int countTempSpin = 0; // Variables to hold (1) number of full spins since start and (2) intermediary spin portions between full spins based on number of sensor triggers.
-
 int spinSpeed = 0; // Variable to hold speed of spinning, where 0 = 33.33 and 1 = 45.00.
-
 int countMessageDisplaySpins = 1; int waitingCycle = 0; long stoppingTime = 2500000; // Indicates (1) the number of rotations a display message is active before being replaced with RPM, (2) represents intermediary counter and (3) determines the amount of microseconds elapsed after which the platter is considered stopped.
 int triggerNumber = 4; // Indicates the number of sensor triggers per rotation.
-
 int correctionSpin = 4; int correctionSpinShort = 2; long correctionSpinCount = 0; int correctionMovement = 5; // Indicates (1) number of rotations to wait for applying correction with small corrections, (2) number of rotations to wait for applying correction with large corrections, (3) temporary spin count and (4) maximum amount of steps to correct per cycle.
 float correctionQ = 0.01; // Indicates the difference quotient from standard speed to activate automatic correction.
-
 float derivedQ = 0.01; // Indicates the correction in RPM derived from a single 0.01Hz step (single "click").
 
 void setup()
@@ -64,14 +61,13 @@ void setup()
   u8g2.begin();
   drawLogo();
 
-  Serial.begin(9600);
+  if (debugSerial) { Serial.begin(9600); }
 }
 
 void loop()
 {
   buttonSTB.tick();
-  buttonSWT.tick();
-  
+  buttonSWT.tick(); 
   if (activeSpin)
   {
     if (justStarted)
@@ -162,8 +158,7 @@ void triggerSensor() {
 void showRPM() {
     if ((timeHallNew[countTempSpin] == 0) || (timeHallPrevious[countTempSpin] == 0)) { return; }
     float currentRPM = 60000000.0 / (timeHallNew[countTempSpin] - timeHallPrevious[countTempSpin]);
-    Serial.println(currentRPM, 4);
-
+    if (debugSerial) { Serial.println(currentRPM, 4); }
     if (correctionSpinCount > correctionSpin) // Rest time has completed, and platter has spun more cycles than correctionSpin.
     {
       if (modeAutomatic)
@@ -176,19 +171,6 @@ void showRPM() {
           int stepsX = (correctX > correctionMovement ? correctionMovement : correctX);
           correctionSpinCount = ((correctX > correctionMovement * 2) ? (correctionSpin - correctionSpinShort) : 0); // Waits for correctionMovement rotations before applying new correction, or correctionSpinShort
           timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
-
-          /* DEBUG
-          Serial.print(correctDirection);
-          Serial.print(" needing: ");
-          Serial.print(correctX);
-          Serial.print(" but correcting: ");
-          Serial.print(stepsX);
-          Serial.print(" and waiting: ");
-          Serial.print(correctionSpin - correctionSpinCount);
-          Serial.println();
-          Serial.println();
-          */
-          
           for (int x = 0; x < stepsX; x++)
           {
             pseudoClickButton(8 + correctDirection);
