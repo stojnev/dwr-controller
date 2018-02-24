@@ -40,7 +40,7 @@ int pseudoClickDelay = 25;
 OneButton buttonSTB(pinButtonSTB, true);
 OneButton buttonSWT(pinButtonSWT, true);
 
-volatile unsigned long timeHallNew[8]; unsigned long timeHallPrevious[8]; // Variables pairs to hold new and old times for sensor triggers - arrays are provisioned to account for a maximum of 8 sensor triggers.
+volatile unsigned long timeHallNew[12]; unsigned long timeHallPrevious[12]; // Variables pairs to hold new and old times for sensor triggers - arrays are provisioned to account for a maximum of 8 sensor triggers.
 boolean activeSpin = false; boolean justStarted = true; boolean modeAutomatic = true; // Variables to indicate whether (1) actively spinning, (2) just started spinning (legacy purpose) and (3) status of automatic correction. 
 long countSpin = 0; int countTempSpin = 0; // Variables to hold (1) number of full spins since start and (2) intermediary spin portions between full spins based on number of sensor triggers.
 
