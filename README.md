@@ -20,12 +20,12 @@ Additionally, assembled data derives a difference quotient from desired speed wh
 
 ## Dependencies
 
-[OneButton](https://github.com/mathertel/OneButton) 
-[U8G2](https://github.com/olikraus/u8g2)
+- [OneButton](https://github.com/mathertel/OneButton) 
+- [U8G2](https://github.com/olikraus/u8g2)
 
 ## Hardware
 
-Arduino Nano (or similar)
-Hall Effect Sensor (or an optical sensor)
-Magnets (or strips of reflective tape for an optical sensor)
-OLED (using a SSD1306 based 0.91" via I2C)
+- Arduino Nano (or similar)
+- Hall Effect Sensor (or an optical sensor)
+- Magnets (or strips of reflective tape for an optical sensor)
+- OLED (using a SSD1306 based 0.91" via I2C)
