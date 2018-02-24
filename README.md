@@ -29,3 +29,6 @@ Additionally, assembled data derives a difference quotient from desired speed wh
 - Hall Effect Sensor (or an optical sensor)
 - Magnets (or strips of reflective tape for an optical sensor)
 - OLED (using a SSD1306 based 0.91" via I2C)
+- CD4066B CMOS Quad Bilateral Switch (***)
+
+(***) For most of principal development, seemed to likes to see pull-down resistors on the 4 control pins - typically values between 6.8K and 10K. 
