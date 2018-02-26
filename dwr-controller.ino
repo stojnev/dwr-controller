@@ -104,17 +104,19 @@ void loop()
 void initializeButtonsSwitchesSensors()
 {
   // Initialize output pins for analog switch.
-  for (int p = 6; p <= 9; p++)
+  if (!tachometerOnly)
   {
-    pinMode(p, OUTPUT);
-    digitalWrite(p, LOW);
+    for (int p = 6; p <= 9; p++)
+    {
+      pinMode(p, OUTPUT);
+      digitalWrite(p, LOW);
+    }
+    // Attach subroutines to button events.
+    buttonSTB.attachClick(startOperation);
+    buttonSWT.attachClick(switchRotationSpeed);
+    buttonSWT.attachLongPressStart(switchAutomaticMode);  
   }
-
-  // Attach subroutines to button events.
-  buttonSTB.attachClick(startOperation);
-  buttonSWT.attachClick(switchRotationSpeed);
-  buttonSWT.attachLongPressStart(switchAutomaticMode);  
-
+  
   // Initialize sensor pin and attach interrupt routines.
   pinMode(pinSensor, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(pinSensor), triggerSensor, FALLING);
@@ -138,6 +140,7 @@ void switchRotationSpeed()
 
 void switchAutomaticMode()
 {
+  if (tachometerOnly) { return; }
   if (!activeSpin) { return; }
   modeAutomatic = !modeAutomatic;
   writeToDisplay(1);
@@ -160,23 +163,26 @@ void triggerSensor() {
 void showRPM() {
     if ((timeHallNew[countTempSpin] == 0) || (timeHallPrevious[countTempSpin] == 0)) { return; }
     float currentRPM = 60000000.0 / (timeHallNew[countTempSpin] - timeHallPrevious[countTempSpin]);
-    if (debugSerial) { Serial.println(currentRPM, 4); }
-    if (correctionSpinCount > correctionSpin) // Rest time has completed, and platter has spun more cycles than correctionSpin.
+    if (debugSerial) { Serial.print(currentRPM, 4); }
+    if (!tachometerOnly)
     {
-      if (modeAutomatic)
+      if (correctionSpinCount > correctionSpin) // Rest time has completed, and platter has spun more cycles than correctionSpin.
       {
-        float DQ = calculateDifferenceQ(currentRPM);
-        if (abs(DQ) > correctionQ)
+        if (modeAutomatic)
         {
-          int correctX = floor(abs(DQ) / derivedQ); int correctDirection = 0; // Indicates direction for correction, where 0 = UP and 1 = DOWN.
-          if (DQ < 0) { correctDirection = 1; }
-          int stepsX = (correctX > correctionMovement ? correctionMovement : correctX);
-          correctionSpinCount = ((correctX > correctionMovement * 2) ? (correctionSpin - correctionSpinShort) : 0); // Waits for correctionMovement rotations before applying new correction, or correctionSpinShort
-          timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
-          for (int x = 0; x < stepsX; x++)
+          float DQ = calculateDifferenceQ(currentRPM);
+          if (abs(DQ) > correctionQ)
           {
-            pseudoClickButton(8 + correctDirection);
-            delay(pseudoClickDelay * 2);
+            int correctX = floor(abs(DQ) / derivedQ); int correctDirection = 0; // Indicates direction for correction, where 0 = UP and 1 = DOWN.
+            if (DQ < 0) { correctDirection = 1; }
+            int stepsX = (correctX > correctionMovement ? correctionMovement : correctX);
+            correctionSpinCount = ((correctX > correctionMovement * 2) ? (correctionSpin - correctionSpinShort) : 0); // Waits for correctionMovement rotations before applying new correction, or correctionSpinShort
+            timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
+            for (int x = 0; x < stepsX; x++)
+            {
+              pseudoClickButton(8 + correctDirection);
+              delay(pseudoClickDelay * 2);
+            }
           }
         }
       }
