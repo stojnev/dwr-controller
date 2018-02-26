@@ -71,6 +71,7 @@ void loop()
   buttonSWT.tick(); 
   if (activeSpin)
   {
+    unsigned long currentMicros = micros();
     if (justStarted)
     {
       writeToDisplay(3);
@@ -81,9 +82,8 @@ void loop()
       {
         showRPM();
       }
-      timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
     }
-    else if (micros() - timeHallNew[countTempSpin] > stoppingTime) // Show waiting message after 2.5 seconds of no new pulses, but only if pulses were detected.
+    else if (currentMicros - timeHallNew[countTempSpin] > stoppingTime) // Show waiting message after 2.5 seconds of no new pulses, but only if pulses were detected.
     {
       // Default to 33.33 RPM to allow for smoother start-up.
       spinSpeed = 0;
@@ -97,6 +97,7 @@ void loop()
       correctionSpinCount = 0;
       drawLogo();
     }
+    timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
     delay(pseudoClickDelay);
   }
 }
