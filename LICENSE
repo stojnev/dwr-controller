@@ -19,3 +19,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+"dŵr controller" uses:
+
+- OneButton (https://github.com/mathertel/OneButton) licensed under the terms of BSD.
+- U8G2 (https://github.com/olikraus/u8g2) licensed under the terms of the new-bsd license (two-clause bsd license).
