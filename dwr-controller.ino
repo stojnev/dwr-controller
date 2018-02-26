@@ -41,6 +41,7 @@ OneButton buttonSTB(pinButtonSTB, true);
 OneButton buttonSWT(pinButtonSWT, true);
 
 boolean debugSerial = true; // Determines if output written to serial (mostly if not exclusively for debugging purposes).
+boolean tachometerOnly = false; // A setting of "true" disables pseudoClickButton() and switchRotationSpeed() for the code to work as tachometer only.
 volatile unsigned long timeHallNew[12]; unsigned long timeHallPrevious[12]; // Variables pairs to hold new and old times for sensor triggers - arrays are provisioned to account for a maximum of 8 sensor triggers.
 boolean activeSpin = false; boolean justStarted = true; boolean modeAutomatic = true; // Variables to indicate whether (1) actively spinning, (2) just started spinning (legacy purpose) and (3) status of automatic correction. 
 long countSpin = 0; int countTempSpin = 0; // Variables to hold (1) number of full spins since start and (2) intermediary spin portions between full spins based on number of sensor triggers.
@@ -126,6 +127,7 @@ void startOperation()
 
 void switchRotationSpeed()
 {
+  if (tachometerOnly) { return; }
   if (!activeSpin) { return; }
   spinSpeed++;
   if (spinSpeed > 1) { spinSpeed = 0; digitalWrite(pinSwitchSWT, LOW); }
@@ -192,6 +194,7 @@ float calculateDifferenceQ(float rpmQ)
 // "Clicks" a button connected to the analog switch utilizing a pretedermined delay for debouncing purposes.
 void pseudoClickButton(int pinButton)
 {
+  if (tachometerOnly) { return; }
   digitalWrite(pinButton, HIGH);
   delay(pseudoClickDelay);
   digitalWrite(pinButton, LOW);
