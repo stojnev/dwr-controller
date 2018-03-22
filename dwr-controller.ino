@@ -209,11 +209,11 @@ void showRPM()
   {
     averageValues[averageCount] = currentRPM;
     averageCount++;
-    if (averageCount == averageTotal)
+    if (averageCount >= averageTotal)
     {
+      averageCount = 0;
       if (!averageFlip)
       {
-        averageCount = 0;
         averageCompleted = true;
       }
       else
@@ -233,7 +233,7 @@ void showRPM()
   }
   if (debugSerial)
   {
-    Serial.print(currentX, 4); Serial.print(" "); Serial.print(currentRPM, 4); Serial.println();
+    Serial.print(currentX, 4); Serial.print(" "); Serial.print(currentRPM, 4); Serial.print(" "); Serial.print(averageCount); Serial.println();
   }
   writeToDisplay(currentRPM);
 }
