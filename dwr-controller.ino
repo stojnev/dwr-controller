@@ -49,6 +49,8 @@ int correctionSpin = 4; int correctionSpinShort = 2; long correctionSpinCount = 
 float correctionQ = 0.01; // Indicates the difference quotient from standard speed to activate automatic correction.
 float derivedQ = 0.01; // Indicates the correction in RPM derived from a single 0.01Hz step (single "click").
 boolean averageCalc = true, averageCompleted = false; const int averageTotal = 16; int averageCount = 0; float averageValues[averageTotal]; boolean averageFlip = false; // Indicates (1) whether to do averaging and (2) if first pass of averaging completed, (3) number of passes for each averaging.
+float fixRPM = 0, fixSteps = 0; // Variables for programmatic calculation of derivedQ.
+const float setQ = 0.01;
 
 OneButton buttonSTB(pinButtonSTB, true);
 OneButton buttonSWT(pinButtonSWT, true);
@@ -101,6 +103,7 @@ void loop()
       drawLogo();
       averageCount = 0;
       averageCompleted = false;
+      fixSteps = 0;
     }
     timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
     delay(pseudoClickDelay);
@@ -149,6 +152,7 @@ void switchRotationSpeed()
   averageCount = 0;
   averageCompleted = false;
   averageFlip = true;
+  fixSteps = 0;
   writeToDisplay(2);
 }
 
@@ -162,6 +166,7 @@ void switchAutomaticMode()
   }
   modeAutomatic = !modeAutomatic;
   writeToDisplay(1);
+  fixSteps = 0;
 }
 
 void triggerSensor()
@@ -188,6 +193,13 @@ void showRPM()
     {
       if (modeAutomatic)
       {
+        if (fixSteps > 1)
+        {
+          derivedQ = abs(currentRPM - fixRPM) / fixSteps;
+          if (derivedQ > setQ) { derivedQ = setQ; }
+          fixSteps = 0;
+          fixRPM = 0;
+        }
         float DQ = calculateDifferenceQ(currentRPM);
         if (abs(DQ) > correctionQ)
         {
@@ -196,6 +208,8 @@ void showRPM()
           int stepsX = (correctX > correctionMovement ? correctionMovement : correctX);
           correctionSpinCount = ((correctX > correctionMovement * 2) ? (correctionSpin - correctionSpinShort) : 0); // Waits for correctionMovement rotations before applying new correction, or correctionSpinShort
           timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
+          fixRPM = currentRPM;
+          fixSteps = stepsX;
           for (int x = 0; x < stepsX; x++)
           {
             pseudoClickButton(8 + correctDirection);
@@ -233,7 +247,7 @@ void showRPM()
   }
   if (debugSerial)
   {
-    Serial.print(currentX, 4); Serial.print(" "); Serial.print(currentRPM, 4); Serial.print(" "); Serial.print(averageCount); Serial.println();
+    Serial.print(currentX, 4); Serial.print(" "); Serial.print(currentRPM, 4); Serial.print(" "); Serial.print(derivedQ, 4); Serial.print(" "); Serial.print(averageCount); Serial.println();
   }
   writeToDisplay(currentRPM);
 }
