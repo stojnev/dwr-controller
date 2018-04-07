@@ -90,24 +90,29 @@ void loop()
     }
     else if (currentMicros - timeHallNew[countTempSpin] > stoppingTime) // Show waiting message after 2.5 seconds of no new pulses, but only if pulses were detected.
     {
-      // Default to 33.33 RPM to allow for smoother start-up.
-      spinSpeed = 0;
-      digitalWrite(pinSwitchSWT, LOW);
-
-      // Reset active rotation variables.
-      activeSpin = false;
-      justStarted = true;
-      countSpin = 0;
-      countTempSpin = 0;
-      correctionSpinCount = 0;
-      drawLogo();
-      averageCount = 0;
-      averageCompleted = false;
-      fixSteps = 0;
+      stopSpin();
     }
     timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
     delay(pseudoClickDelay);
   }
+}
+
+void stopSpin()
+{
+  // Default to 33.33 RPM to allow for smoother start-up.
+  spinSpeed = 0;
+  digitalWrite(pinSwitchSWT, LOW);
+  
+  // Reset active rotation variables.
+  activeSpin = false;
+  justStarted = true;
+  countSpin = 0;
+  countTempSpin = 0;
+  correctionSpinCount = 0;
+  drawLogo();
+  averageCount = 0;
+  averageCompleted = false;
+  fixSteps = 0;
 }
 
 void initializeButtonsSwitchesSensors()
@@ -129,6 +134,7 @@ void initializeButtonsSwitchesSensors()
 
 void startOperation()
 {
+  if (activeSpin) { stopSpin(); }
   pseudoClickButton(pinSwitchSTB);
 }
 
