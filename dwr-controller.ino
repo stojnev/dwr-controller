@@ -1,5 +1,6 @@
-#include <OneButton.h>
+x#include <OneButton.h>
 #include <U8g2lib.h>
+#include <EEPROM.h>
 
 #define dwrlogo_width 60
 #define dwrlogo_height 30
@@ -51,6 +52,8 @@ float derivedQ = 0.01; // Indicates the correction in RPM derived from a single 
 boolean averageCalc = true, averageCompleted = false; const int averageTotal = 16; int averageCount = 0; float averageValues[averageTotal]; boolean averageFlip = false; // Indicates (1) whether to do averaging and (2) if first pass of averaging completed, (3) number of passes for each averaging.
 float fixRPM = 0, fixSteps = 0; // Variables for programmatic calculation of derivedQ.
 const float setQ = 0.01;
+unsigned long timerCurrentMicros = 0, timerPreviousMicros = 0;
+const int timerSlots = 4; int timerX[timerSlots]; const int timerMessageWait = 5000; long timerMessage = 0; boolean timerShown = false;
 
 OneButton buttonSTB(pinButtonSTB, true);
 OneButton buttonSWT(pinButtonSWT, true);
@@ -71,12 +74,22 @@ void setup()
 }
 
 void loop()
-{
+{  
   buttonSTB.tick();
   buttonSWT.tick();
+  if (timerMessage > 0)
+  {
+    if (millis() > (timerMessage + timerMessageWait))
+    {
+      timerMessage = 0;
+      timerShown = false;
+      drawLogo();
+    }
+  }
   if (activeSpin)
   {
     unsigned long currentMicros = micros();
+    checkTimer();
     if (justStarted)
     {
       writeToDisplay(3);
@@ -88,7 +101,7 @@ void loop()
         showRPM();
       }
     }
-    else if (currentMicros - timeHallNew[countTempSpin] > stoppingTime) // Show waiting message after 2.5 seconds of no new pulses, but only if pulses were detected.
+    else if (currentMicros - timeHallNew[countTempSpin] > stoppingTime) // Show waiting message after ~2.5 seconds of no new pulses, but only if pulses were detected.
     {
       stopSpin();
     }
@@ -105,7 +118,6 @@ void stopSpin()
   
   // Reset active rotation variables.
   activeSpin = false;
-  justStarted = true;
   countSpin = 0;
   countTempSpin = 0;
   correctionSpinCount = 0;
@@ -113,6 +125,9 @@ void stopSpin()
   averageCount = 0;
   averageCompleted = false;
   fixSteps = 0;
+  timerCurrentMicros = 0;
+  timerPreviousMicros = 0;
+  timerMessage = 0;
 }
 
 void initializeButtonsSwitchesSensors()
@@ -125,6 +140,7 @@ void initializeButtonsSwitchesSensors()
       digitalWrite(p, LOW);
     }
     buttonSTB.attachClick(startOperation);
+    buttonSTB.attachLongPressStart(clearTimer);
     buttonSWT.attachClick(switchRotationSpeed);
     buttonSWT.attachLongPressStart(switchAutomaticMode);
   }
@@ -134,8 +150,17 @@ void initializeButtonsSwitchesSensors()
 
 void startOperation()
 {
-  if (activeSpin) { stopSpin(); }
+  if (activeSpin)
+  {
+    stopSpin();
+    activeSpin = false;
+  }
+  else
+  {
+    justStarted = true;
+  }
   pseudoClickButton(pinSwitchSTB);
+  timerMessage = 0;
 }
 
 void switchRotationSpeed()
@@ -168,6 +193,7 @@ void switchAutomaticMode()
     return;
   }
   if (!activeSpin) {
+    writeToDisplay(4);
     return;
   }
   modeAutomatic = !modeAutomatic;
@@ -333,8 +359,88 @@ void writeToDisplay(float TTW)
         u8g2.setCursor(0, 32);
         u8g2.print("calculations");
       }
-      waitingCycle = countMessageDisplaySpins;
+      else if (TTW == 4)
+      {
+        int timerX1, timerX2;
+        calculateRuntime(timerX1, timerX2);
+        if (timerX1 > 0) { u8g2.print(timerX1); u8g2.print("hr "); }
+        if (timerX2 >= 0) { u8g2.print(timerX2); u8g2.print("min"); }
+        u8g2.setCursor(0, 32);
+        u8g2.print("runtime");
+        timerMessage = millis();
+        timerShown = true;
+      }
+      else if (TTW == 5)
+      {
+        u8g2.print("CLEARING");
+        u8g2.setCursor(0, 32);
+        u8g2.print("runtimes");
+        timerMessage = millis();
+      }
+      if (activeSpin) { waitingCycle = countMessageDisplaySpins; }
     }
   }
   while ( u8g2.nextPage() );
 }
+
+
+void clearTimer()
+{
+  if (activeSpin || !timerShown)
+  {
+    return;
+  }
+  writeToDisplay(5);
+  for (int e = 0; e <= timerSlots; e++) {
+    EEPROM.write(e, 0);
+  }
+}
+
+void checkTimer()
+{
+  if (timerCurrentMicros == 0 && timerPreviousMicros == 0)
+  {
+    timerCurrentMicros = micros();
+    timerPreviousMicros = timerCurrentMicros;
+  }
+  else { timerCurrentMicros = micros(); }
+  int timerSeconds = (int) ((timerCurrentMicros - timerPreviousMicros) / 1000000);
+  if (timerSeconds > 0)
+  {
+    for (int e = 0; e < timerSlots; e++)
+    {
+      byte valueX = EEPROM.read(e);
+      timerX[e] = (int) valueX;   
+    }
+    timerPreviousMicros = timerCurrentMicros;
+    int changeX = timerSeconds;
+    for (int e = 0; e < 4; e++)
+    {
+      timerX[e] += changeX;
+      if (timerX[e] > 255)
+      {
+        changeX = timerX[e] - 255;
+        timerX[e] = changeX;
+        changeX = 1;
+      }
+      else
+      {
+        changeX = 0;
+      }
+      EEPROM.write(e, timerX[e]);
+    }
+  }
+}
+
+void calculateRuntime(int & calcX1, int & calcX2)
+{
+  long runtimeX = 0;
+  for (int e = 0; e < timerSlots; e++)
+  {
+    int tempX = (int) EEPROM.read(e);
+    if (tempX > 0) { runtimeX += tempX * pow(255, e); }
+  }
+  calcX2 = (runtimeX / 60) % 60;
+  calcX1 = (int) (runtimeX / 3600);
+}
+
