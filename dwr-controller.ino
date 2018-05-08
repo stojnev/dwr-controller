@@ -74,7 +74,7 @@ void setup()
 }
 
 void loop()
-{  
+{
   buttonSTB.tick();
   buttonSWT.tick();
   if (timerMessage > 0)
@@ -89,7 +89,9 @@ void loop()
   if (activeSpin)
   {
     unsigned long currentMicros = micros();
-    checkTimer();
+    if (timerPreviousMicros == 0) {
+      timerPreviousMicros = micros();
+    }
     if (justStarted)
     {
       writeToDisplay(3);
@@ -115,7 +117,10 @@ void stopSpin()
   // Default to 33.33 RPM to allow for smoother start-up.
   spinSpeed = 0;
   digitalWrite(pinSwitchSWT, LOW);
-  
+
+  // Save timer.
+  checkTimer();
+
   // Reset active rotation variables.
   activeSpin = false;
   countSpin = 0;
@@ -128,6 +133,7 @@ void stopSpin()
   timerCurrentMicros = 0;
   timerPreviousMicros = 0;
   timerMessage = 0;
+
 }
 
 void initializeButtonsSwitchesSensors()
@@ -216,7 +222,9 @@ void triggerSensor()
 
 void showRPM()
 {
-  if ((timeHallNew[countTempSpin] == 0) || (timeHallPrevious[countTempSpin] == 0)) { return; }
+  if ((timeHallNew[countTempSpin] == 0) || (timeHallPrevious[countTempSpin] == 0)) {
+    return;
+  }
   float currentRPM = 60000000.0 / (timeHallNew[countTempSpin] - timeHallPrevious[countTempSpin]);
   float currentX = currentRPM;
   if (!tachometerOnly)
@@ -228,7 +236,9 @@ void showRPM()
         if (fixSteps > 1)
         {
           derivedQ = abs(currentRPM - fixRPM) / fixSteps;
-          if (derivedQ > setQ) { derivedQ = setQ; }
+          if (derivedQ > setQ) {
+            derivedQ = setQ;
+          }
           fixSteps = 0;
           fixRPM = 0;
         }
@@ -236,7 +246,9 @@ void showRPM()
         if (abs(DQ) > correctionQ)
         {
           int correctX = floor(abs(DQ) / derivedQ); int correctDirection = 0; // Indicates direction for correction, where 0 = UP and 1 = DOWN.
-          if (DQ < 0) { correctDirection = 1; }
+          if (DQ < 0) {
+            correctDirection = 1;
+          }
           int stepsX = (correctX > correctionMovement ? correctionMovement : correctX);
           correctionSpinCount = ((correctX > correctionMovement * 2) ? (correctionSpin - correctionSpinShort) : 0); // Waits for correctionMovement rotations before applying new correction, or correctionSpinShort
           timeHallPrevious[countTempSpin] = timeHallNew[countTempSpin];
@@ -315,7 +327,7 @@ void drawLogo(void) {
   while (u8g2.nextPage());
 }
 
-// Writes (1) RPM to the display, (2) correction mode message and (3) speed change message. TTW > 10 gets written as RPM. For values below that threshold, 1 = "Manual/Automatic Correction Mode Change", 2 = "33/45 Speed Change" and 3 = "Starting Up".
+// Writes (1) RPM to the display, (2) correction mode message, (3) speed change message and (4) total runtime. TTW > 10 gets written as RPM. For values below that threshold, 1 = "Manual/Automatic Correction Mode Change", 2 = "33/45 Speed Change", 3 = "Starting Up" and 4 = "Runtime".
 void writeToDisplay(float TTW)
 {
   if (waitingCycle > 0) {
@@ -363,8 +375,14 @@ void writeToDisplay(float TTW)
       {
         int timerX1, timerX2;
         calculateRuntime(timerX1, timerX2);
-        if (timerX1 > 0) { u8g2.print(timerX1); u8g2.print("hr "); }
-        if (timerX2 >= 0) { u8g2.print(timerX2); u8g2.print("min"); }
+        if (timerX1 > 0) {
+          u8g2.print(timerX1);
+          u8g2.print("hr ");
+        }
+        if (timerX2 >= 0) {
+          u8g2.print(timerX2);
+          u8g2.print("min");
+        }
         u8g2.setCursor(0, 32);
         u8g2.print("runtime");
         timerMessage = millis();
@@ -377,7 +395,9 @@ void writeToDisplay(float TTW)
         u8g2.print("runtimes");
         timerMessage = millis();
       }
-      if (activeSpin) { waitingCycle = countMessageDisplaySpins; }
+      if (activeSpin) {
+        waitingCycle = countMessageDisplaySpins;
+      }
     }
   }
   while ( u8g2.nextPage() );
@@ -403,14 +423,16 @@ void checkTimer()
     timerCurrentMicros = micros();
     timerPreviousMicros = timerCurrentMicros;
   }
-  else { timerCurrentMicros = micros(); }
+  else {
+    timerCurrentMicros = micros();
+  }
   int timerSeconds = (int) ((timerCurrentMicros - timerPreviousMicros) / 1000000);
   if (timerSeconds > 0)
   {
     for (int e = 0; e < timerSlots; e++)
     {
       byte valueX = EEPROM.read(e);
-      timerX[e] = (int) valueX;   
+      timerX[e] = (int) valueX;
     }
     timerPreviousMicros = timerCurrentMicros;
     int changeX = timerSeconds;
@@ -438,7 +460,9 @@ void calculateRuntime(int & calcX1, int & calcX2)
   for (int e = 0; e < timerSlots; e++)
   {
     int tempX = (int) EEPROM.read(e);
-    if (tempX > 0) { runtimeX += tempX * pow(255, e); }
+    if (tempX > 0) {
+      runtimeX += tempX * pow(255, e);
+    }
   }
   calcX2 = (runtimeX / 60) % 60;
   calcX1 = (int) (runtimeX / 3600);
