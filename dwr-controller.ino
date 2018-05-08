@@ -89,9 +89,7 @@ void loop()
   if (activeSpin)
   {
     unsigned long currentMicros = micros();
-    if (timerPreviousMicros == 0) {
-      timerPreviousMicros = micros();
-    }
+    checkTimer();
     if (justStarted)
     {
       writeToDisplay(3);
@@ -117,9 +115,6 @@ void stopSpin()
   // Default to 33.33 RPM to allow for smoother start-up.
   spinSpeed = 0;
   digitalWrite(pinSwitchSWT, LOW);
-
-  // Save timer.
-  checkTimer();
 
   // Reset active rotation variables.
   activeSpin = false;
@@ -427,7 +422,7 @@ void checkTimer()
     timerCurrentMicros = micros();
   }
   int timerSeconds = (int) ((timerCurrentMicros - timerPreviousMicros) / 1000000);
-  if (timerSeconds > 0)
+  if (timerSeconds > 60)
   {
     for (int e = 0; e < timerSlots; e++)
     {
