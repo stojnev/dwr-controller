@@ -6,7 +6,7 @@
 
 - Calculates RPM from up to 12 (*) control points on a turntable platter via a single sensor.
 - Handles an external controller through a rough PI loop (running speed, speed mode (33/45) and control method).
-- (WIP) PI parameter auto-tune.
+- Rough PI parameter auto-tune.
 
 (*) Technically, can be as many as needed, or as many as can physically fit on the turntable platter.
 
