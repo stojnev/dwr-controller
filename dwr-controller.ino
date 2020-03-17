@@ -322,7 +322,7 @@ void drawLogo(void) {
   while (u8g2.nextPage());
 }
 
-// Writes (1) RPM to the display, (2) correction mode message, (3) speed change message and (4) total runtime. TTW > 10 gets written as RPM. For values below that threshold, 1 = "Manual/Automatic Correction Mode Change", 2 = "33/45 Speed Change", 3 = "Starting Up" and 4 = "Runtime".
+// Writes (1) RPM to the display, (2) correction mode message, (3) speed change message, (4) total runtime, (5) clearing message and (6) W&F. TTW > 10 gets written as RPM. For values below that threshold, 1 = "Manual/Automatic Correction Mode Change", 2 = "33/45 Speed Change", 3 = "Starting Up" and 4 = "Runtime".
 void writeToDisplay(float TTW)
 {
   if (waitingCycle > 0) {
@@ -390,6 +390,12 @@ void writeToDisplay(float TTW)
         u8g2.print("runtimes");
         timerMessage = millis();
       }
+      else if (TTW == 6)
+      {
+        u8g2.setFont(u8g2_font_logisoso32_tr);
+        u8g2.setCursor(0, 32);
+        u8g2.print("W&F 0.05%");
+      }
       if (activeSpin) {
         waitingCycle = countMessageDisplaySpins;
       }
@@ -401,7 +407,12 @@ void writeToDisplay(float TTW)
 
 void clearTimer()
 {
-  if (activeSpin || !timerShown)
+  if (activeSpin)
+  {
+    writeToDisplay(6);
+    return;
+  }
+  if (!timerShown)
   {
     return;
   }
