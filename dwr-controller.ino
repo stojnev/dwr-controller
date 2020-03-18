@@ -49,6 +49,7 @@ int countMessageDisplaySpins = 1; int waitingCycle = 0; long stoppingTime = 2500
 int correctionSpin = 3; int correctionSpinShort = 2; long correctionSpinCount = 0; int correctionMovement = 5; // Indicates (1) number of rotations to wait for applying correction with small corrections, (2) number of rotations to wait for applying correction with large corrections, (3) temporary spin count and (4) maximum amount of steps to correct per cycle.
 float correctionQ = 0.01; // Indicates the difference quotient from standard speed to activate automatic correction.
 float derivedQ = 0.01; // Indicates the correction in RPM derived from a single 0.01Hz step (single "click").
+float totalWF = 0;
 boolean averageCalc = true, averageCompleted = false; const int averageTotal = 16; int averageCount = 0; float averageValues[averageTotal]; boolean averageFlip = false; // Indicates (1) whether to do averaging and (2) if first pass of averaging completed, (3) number of passes for each averaging.
 float fixRPM = 0, fixSteps = 0; // Variables for programmatic calculation of derivedQ.
 const float setQ = 0.01;
@@ -276,17 +277,20 @@ void showRPM()
     }
     if (averageCompleted)
     {
-      float averageSum = 0;
+      float averageSum = 0; totalWF = 0; float SB = 33.3333;
+      if (spinSpeed == 1) { SB = 45.0000; }
       for (int a = 0; a < averageTotal; a++)
       {
         averageSum += averageValues[a];
+        totalWF += abs((averageValues[a] / SB) - 1);
       }
       currentRPM = averageSum / averageTotal;
+      totalWF = totalWF / averageTotal * 100;
     }
   }
   if (debugSerial)
   {
-    Serial.print(currentX, 4); Serial.print(" "); Serial.print(currentRPM, 4); Serial.print(" "); Serial.print(derivedQ, 4); Serial.print(" "); Serial.print(averageCount); Serial.println();
+    Serial.print(currentX, 4); Serial.print(" "); Serial.print(currentRPM, 4); Serial.print(" "); Serial.print(derivedQ, 4); Serial.print(" "); Serial.print(averageCount); Serial.print(" "); Serial.print(totalWF, 5); Serial.println();
   }
   writeToDisplay(currentRPM);
 }
@@ -392,12 +396,15 @@ void writeToDisplay(float TTW)
       }
       else if (TTW == 6)
       {
-        u8g2.setFont(u8g2_font_logisoso32_tr);
-        u8g2.setCursor(0, 32);
-        u8g2.print("W&F 0.05%");
+        u8g2.print("W&F");
+        u8g2.setCursor(40, 32);
+        u8g2.print(totalWF, 3);
+        u8g2.setCursor(90, 32);
+        u8g2.print("%");
       }
       if (activeSpin) {
         waitingCycle = countMessageDisplaySpins;
+        if (TTW == 6) { waitingCycle = countMessageDisplaySpins * 2; }
       }
     }
   }
