@@ -1,6 +1,6 @@
 # dŵr controller
 
-"dŵr controller" ("dŵr") uses two pushbuttons to access / activate various features. In order to have a minimal number of buttons, yet retain full functionality, dŵr relies on a combination of (1) various button events (click, double click) and (2) turntable running state (spinning, not spinning).
+"dŵr controller" ("dŵr") uses two pushbuttons to access / activate various features. In order to have a minimal number of buttons, yet retain full functionality, dŵr relies on a combination of (1) various button events (short press, long press) and (2) turntable running state (spinning, not spinning).
 
 * [LSP] - Left button press;
 * [LDP] - Left button hold press;
