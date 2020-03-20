@@ -7,6 +7,8 @@
 * [RSP] - Right button press;
 * [RDP] - Right button hold press;
 
+Left button refers to momentary switch typically connected to pin 4, right button refers to switch typically connected to pin 5.
+
 ## Platter Not Spinning
 
 * [LSP] Start rotation.
