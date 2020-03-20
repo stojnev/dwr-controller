@@ -97,10 +97,7 @@ void loop()
       justStarted = false;
     }
     if (timeHallNew[countTempSpin] > timeHallPrevious[countTempSpin]) {
-      if (countSpin > 1)
-      {
-        showRPM();
-      }
+      if (countSpin > 1) { showRPM(); }
     }
     else if (currentMicros - timeHallNew[countTempSpin] > stoppingTime) // Show waiting message after ~2.5 seconds of no new pulses, but only if pulses were detected.
     {
@@ -167,12 +164,8 @@ void startOperation()
 
 void switchRotationSpeed()
 {
-  if (tachometerOnly) {
-    return;
-  }
-  if (!activeSpin) {
-    return;
-  }
+  if (tachometerOnly) { return; }
+  if (!activeSpin) { return; }
   spinSpeed++;
   if (spinSpeed > 1) {
     spinSpeed = 0;
