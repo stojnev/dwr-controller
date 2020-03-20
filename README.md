@@ -23,7 +23,7 @@ Assembled data derives a difference quotient from desired speed which is then us
 
 Additional features include:
 
-- Calculation of wow as a key component of W&F;
+- Calculation of wow as a primary component of W&F;
 - Recording of standard play time to gauge cartridge life;
 - Dynamic parameter logging for latter analyses. 
 
