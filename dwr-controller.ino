@@ -214,7 +214,8 @@ void showRPM()
   if ((timeHallNew[countTempSpin] == 0) || (timeHallPrevious[countTempSpin] == 0)) {
     return;
   }
-  float currentRPM = 60000000.0 / (timeHallNew[countTempSpin] - timeHallPrevious[countTempSpin]);
+  float ardFIX = 1.0055;
+  float currentRPM = (60000000.0 / (timeHallNew[countTempSpin] - timeHallPrevious[countTempSpin])) * ardFIX;
   float currentX = currentRPM;
   if (!tachometerOnly)
   {
